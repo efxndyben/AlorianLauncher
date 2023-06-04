@@ -1,16 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.ComponentModel;
-using System.Data;
-using System.Drawing;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using System.Windows.Forms;
 using CmlLib.Core;
 using CmlLib.Core.Auth;
-using System.Threading;
-using System.IO;
+using DiscordRPC;
 using System.Net;
 
 namespace AlorianLauncher
@@ -29,14 +19,64 @@ namespace AlorianLauncher
             using var response = request.GetResponse();
             using var stream = response.GetResponseStream();
             pictureBox3.Image = Bitmap.FromStream(stream);
+
+            var haberRequest = WebRequest.Create("https://raw.githubusercontent.com/efxndyben/AlorianLauncher/master/images/haberkapagi.png");
+            using var haberResponse = haberRequest.GetResponse();
+            using var haberStream = haberResponse.GetResponseStream();
+            guna2PictureBox1.Image = Bitmap.FromStream(haberStream);
+        }
+
+        public DiscordRpcClient client { get; private set; }
+
+        //Called when your application first starts.
+        //For example, just before your main loop, on OnEnable for unity.
+        void Initialize()
+        {
+            client = new DiscordRpcClient("1114618806275416198");
+            client.Initialize();
+
+            client.SetPresence(new RichPresence()
+            {
+                Details = "play.alorianmc.net",
+                State = "Ana Menü",
+                Assets = new Assets()
+                {
+                    LargeImageKey = "alrcraft",
+                    LargeImageText = "AlorianMC",
+                    SmallImageKey = "alrcraft_transparent",
+                    SmallImageText = "play.alorianmc.net"
+                }
+            });
+        }
+
+        void InitializeLaunch()
+        {
+            client = new DiscordRpcClient("1114618806275416198");
+            client.Initialize();
+
+            client.SetPresence(new RichPresence()
+            {
+                Details = "play.alorianmc.net",
+                State = "Minecraft 1.16.5",
+                Assets = new Assets()
+                {
+                    LargeImageKey = "alrcraft",
+                    LargeImageText = "AlorianMC",
+                    SmallImageKey = "alrcraft_transparent",
+                    SmallImageText = "play.alorianmc.net"
+                }
+            });
+        }
+
+        void Deinitialize()
+        {
+            client.Dispose();
         }
 
         MSession session;
 
         private void path()
         {
-            // increase connection limit to fast download
-            System.Net.ServicePointManager.DefaultConnectionLimit = 256;
 
             var path = new MinecraftPath();
             var launcher = new CMLauncher(path);
@@ -54,8 +94,6 @@ namespace AlorianLauncher
 
         private void launch()
         {
-            // increase connection limit to fast download
-            System.Net.ServicePointManager.DefaultConnectionLimit = 256;
 
             var path = new MinecraftPath();
             var launcher = new CMLauncher(path);
@@ -63,23 +101,20 @@ namespace AlorianLauncher
             var launchOption = new MLaunchOption
             {
                 MaximumRamMb = 2048,
-                Session = MSession.GetOfflineSession("hello"),
-
-                //ScreenWidth = 1600,
-                //ScreenHeight = 900,
-                ServerIp = "play.alorianmc.net"
+                ServerIp = "play.alorianmc.net",
+                Session = MSession.GetOfflineSession(LoginPage.user),
             };
 
             var process = launcher.CreateProcess("1.16.5", launchOption, checkAndDownload: true);
 
             process.Start();
             this.Hide();
-            Application.Exit();
+            Deinitialize();
         }
 
         private void MainPage_Load(object sender, EventArgs e)
         {
-
+            Initialize();
         }
 
         private void label2_Click(object sender, EventArgs e)
@@ -102,8 +137,10 @@ namespace AlorianLauncher
             oyna_buton.Enabled = false;
             oyna_buton.Text = "Başlatılıyor";
             Thread thread = new Thread(() => launch());
+            
             thread.IsBackground = true;
             thread.Start();
+            
         }
 
         private void guna2ControlBox1_Click(object sender, EventArgs e)
